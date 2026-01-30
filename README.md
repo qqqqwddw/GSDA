@@ -101,23 +101,8 @@ python train_effort_c2p.py --config custom_config.yaml
 
 ### **Small Dataset** (100-500 videos):
 ```
-Epoch 1: Val AUC ~0.65
-Epoch 5: Val AUC ~0.78
-Epoch 10: Val AUC ~0.83
-```
+Epoch 1: Val AP ~0.95
 
-### **Medium Dataset** (500-2000 videos):
-```
-Epoch 1: Val AUC ~0.72
-Epoch 5: Val AUC ~0.85
-Epoch 10: Val AUC ~0.90
-```
-
-### **Large Dataset** (2000+ videos):
-```
-Epoch 1: Val AUC ~0.78
-Epoch 5: Val AUC ~0.90
-Epoch 10: Val AUC ~0.94
 ```
 
 ---
@@ -141,11 +126,11 @@ python train_effort_c2p.py \
 
 ## Common Issues
 
-### **Issue**: "Video not found"
+### **Issue**: "PICTURE not found"
 **Fix**: Check folder names match in dataset loader:
 ```python
-fake_folder='fake_videos'  # Must match your folder name
-real_folder='real_videos'  # Must match your folder name
+fake_folder='PICTURE'  # Must match your folder name
+real_folder='PICTURE'  # Must match your folder name
 ```
 
 ### **Issue**: CUDA OOM
@@ -154,11 +139,7 @@ real_folder='real_videos'  # Must match your folder name
 train_batch_size: 8  # Instead of 16
 ```
 
-### **Issue**: Low accuracy
-**Fix**: 
-1. Need more data (at least 500 videos)
-2. Check data quality
-3. Verify labels are correct
+
 
 ---
 
@@ -175,7 +156,7 @@ train_batch_size: 8  # Instead of 16
 ## Summary
 
 ```bash
-# 1. Organize: fake_videos/ and real_videos/
+# 1. Organize: fake_PICTURE/ and real_PICTURE/
 # 2. Generate splits
 python prepare_custom_dataset.py --fake_dir ... --real_dir ... --output_dir ...
 
