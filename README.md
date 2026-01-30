@@ -8,13 +8,13 @@
 ```bash
 # Your data structure should look like:
 your_dataset/
-├── fake_videos/
+├── fake_picture/
 │   ├── fake_001/
 │   │   ├── 000.png
 │   │   ├── 001.png
 │   │   └── ...
 │   └── fake_002/
-└── real_videos/
+└── real_picture/
     ├── real_001/
     └── real_002/
 ```
@@ -53,8 +53,8 @@ train_loader = get_custom_dataloader(
     batch_size=config['training']['train_batch_size'],
     num_workers=config['training']['workers'],
     num_frames=config['data']['frame_num']['train'],
-    fake_folder='fake_videos',  # Your folder name
-    real_folder='real_videos',  # Your folder name
+    fake_folder='fake_picture',  # Your folder name
+    real_folder='real_picture',  # Your folder name
     is_train=True
 )
 
@@ -64,8 +64,8 @@ val_loader = get_custom_dataloader(
     batch_size=config['training']['test_batch_size'],
     num_workers=config['training']['workers'],
     num_frames=config['data']['frame_num']['test'],
-    fake_folder='fake_videos',
-    real_folder='real_videos',
+    fake_folder='fake_picture',
+    real_folder='real_picture',
     is_train=False
 )
 ```
@@ -99,7 +99,7 @@ python train_effort_c2p.py --config custom_config.yaml
 
 ## What to Expect
 
-### **Small Dataset** (100-500 videos):
+### **Small Dataset** :
 ```
 Epoch 1: Val AP ~0.95
 
