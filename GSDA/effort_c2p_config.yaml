@@ -1,0 +1,208 @@
+# ============================================================
+# EFFORT + C2P Fusion Configuration (Pure Image Training)
+# 纯图片训练模式 - 已移除所有视频相关参数
+# ============================================================
+
+# ==================== 基础配置 ====================
+log_dir: ./logs/effort_c2p_fusion
+save_dir: ./checkpoints/effort_c2p_v1
+
+# 实验信息
+experiment:
+  name: "effort_c2p_fusion_v1"
+  description: "Fusion of EFFORT SVD and C2P semantic guidance - Pure Image Training"
+  tags: ["effort", "c2p", "fusion", "deepfake-detection", "image-only"]
+
+# ==================== 模型配置 ====================
+model:
+  name: effort_c2p
+  backbone: clip_vit_large
+  num_classes: 2  # real/fake
+
+# ==================== 融合特定参数 ====================
+fusion_config:
+  # 是否启用C2P语义引导
+  use_semantic_guidance: true
+  
+  # ★ 核心：SVD秩配置（绝对值）
+  # 对于CLIP ViT-L/14 (hidden_size=1024)：
+  #   - svd_rank=1023: 保留前1023个主成分，训练最后1个（~0.1%参数）
+  #   - svd_rank=1000: 保留前1000个主成分，训练最后24个（~2.3%参数）
+  #   - svd_rank=900:  保留前900个主成分，训练最后124个（~12%参数）
+  svd_rank: 1023
+  
+  # 语义特征维度（CLIP text空间）
+  semantic_dim: 768
+  
+  # ★ 损失权重（与代码完全对应）
+  loss_weights:
+    lambda_cls: 1.0          # 分类损失（交叉熵）
+    lambda_prototype: 0.5    # 原型对比损失（C2P）
+    lambda_caption: 1.0      # Caption对比损失（C2P）
+    lambda_ortho: 0.01       # SVD正交性损失（EFFORT）
+    lambda_keepsv: 0.01      # SVD奇异值保持损失（EFFORT）
+
+# ==================== 数据集配置 ====================
+dataset:
+  # ★ 数据集根目录（你的实际路径）
+  data_root: "/iead/shuju1/xunlian"
+  
+  # ★ JSON标注文件路径
+  train_json: "/iead/shuju1/xunlian/train.json"
+  val_json: "/iead/shuju1/xunlian/val.json"
+  test_json: "/iead/shuju1/xunlian/test.json"
+  
+  # ★ Caption根目录（可选，如果没有可设为null）
+  # 结构应该镜像data_root，例如：
+  # caption_root/
+  #   ├── real/
+  #   │   └── xxx.txt
+  #   └── fake/
+  #       ├── Deepfakes/
+  #       │   └── xxx.txt
+  #       ├── Face2Face/
+  #       └── ...
+  caption_root: null  # 如果有caption，填入路径如 "D:/svd-c2p/captions"
+  
+  # 训练数据集列表（用于记录，实际从JSON加载）
+  train_dataset: [FaceForensics++]
+  
+  # 测试数据集（用于记录）
+  test_dataset: [Celeb-DF-v2, DF40, DeeperForensics-1.0]
+  
+  # 压缩级别（FaceForensics++）
+  compression: c23
+  
+  # 批次大小
+  train_batch_size: 32
+  test_batch_size: 32
+  
+  # 数据加载线程数
+  workers: 8
+  
+  # 图像分辨率（CLIP标准）
+  resolution: 224
+
+# ==================== 数据增强（仅训练时） ====================
+data_augmentation:
+  enabled: true
+  
+  # 几何变换
+  flip_prob: 0.5           # 水平翻转概率
+  rotate_prob: 0.5         # 旋转概率
+  rotate_limit: [-10, 10]  # 旋转角度范围
+  
+  # 模糊
+  blur_prob: 0.7
+  blur_limit: [3, 9]       # 高斯模糊核大小
+  
+  # 颜色变换
+  brightness_prob: 0.5
+  brightness_limit: [-0.2, 0.2]
+  contrast_limit: [-0.2, 0.2]
+  
+  # JPEG压缩模拟
+  quality_lower: 30
+  quality_upper: 100
+  # ★ 新增：随机裁剪 + 缩放
+  random_crop: true
+  crop_scale: [0.8, 1.0]
+
+# ==================== 归一化参数 ====================
+# 使用CLIP官方的ImageNet归一化
+normalization:
+  mean: [0.48145466, 0.4578275, 0.40821073]
+  std: [0.26862954, 0.26130258, 0.27577711]
+
+# ==================== 优化器配置 ====================
+optimizer:
+  type: adamw  # 推荐使用AdamW
+  lr: 0.0001   # 基础学习率（SVD微调建议较小）
+  beta1: 0.9
+  beta2: 0.999
+  eps: 1e-8
+  weight_decay: 0.01
+  amsgrad: false
+
+# ==================== 学习率调度器 ====================
+lr_scheduler:
+  type: cosine           # cosine annealing
+  warmup_epochs: 2       # 前2个epoch线性warmup
+  min_lr: 1e-6          # 最小学习率
+
+# ==================== 训练配置 ====================
+training:
+  # 训练轮数
+  num_epochs: 20
+  start_epoch: 0
+  
+  # 保存与日志
+  save_epoch: 1          # 每1个epoch保存一次checkpoint
+  log_interval: 50       # 每50个batch打印一次日志
+  
+  # 随机种子
+  manual_seed: 42
+  
+  # 是否保存检查点和特征
+  save_checkpoint: true
+  save_features: true
+
+# ==================== 评估指标 ====================
+evaluation:
+  # 主要评估指标
+  metric_scoring: ap  # auc, acc, eer, ap
+  
+  # 是否保存预测结果
+  save_predictions: true
+  
+  # 是否生成混淆矩阵和分类报告
+  generate_report: true
+
+# ==================== GPU配置 ====================
+gpu:
+  # GPU数量（当前只支持单卡）
+  num_gpus: 1
+  
+  # 设备
+  device: "cuda"  # "cuda" 或 "cpu"
+  
+  # CUDA设置
+  cuda_enabled: true
+  cudnn_enabled: true
+  cudnn_benchmark: true
+  
+  # 混合精度训练（可选，节省显存）
+  mixed_precision: true  # 建议开启，可以使用更大的batch_size
+
+# ==================== 预训练模型 ====================
+pretrained:
+  # CLIP模型路径（自动从HuggingFace下载）
+  clip_model_path: "openai/clip-vit-large-patch14"
+  
+  # 如果要从已有checkpoint恢复训练，指定路径
+  resume_checkpoint: null  # 例如: "./checkpoints/best_model.pth"
+  
+  # 可选：从单独的EFFORT或C2P模型初始化
+  effort_checkpoint: null
+  c2p_checkpoint: null
+
+# ==================== 其他配置 ====================
+misc:
+  # 是否使用确定性算法（可复现性）
+  deterministic: true
+  
+  # 梯度裁剪
+  grad_clip_norm: 1.0
+  
+  # 早停（可选）
+  early_stopping:
+    enabled: false
+    patience: 5
+    monitor: val_auc
+
+# ==================== 参考信息 ====================
+# 数据集下载链接:
+# - FaceForensics++: http://www.niessnerlab.org/projects/roessler2018faceforensics.html
+# - Celeb-DF-v2: https://github.com/yuezunli/celeb-deepfakeforensics
+# - DF40: https://github.com/YZY-stack/DF40
+# - DeeperForensics: https://github.com/EndlessSora/DeeperForensics-1.0
