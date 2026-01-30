@@ -37,7 +37,7 @@ python prepare_custom_dataset.py \
 Edit `train_effort_c2p.py`, replace dataloader section:
 
 ```python
-# OLD (line ~280):
+# OLD :
 from dataset import DeepfakeDataset
 
 # NEW:
@@ -107,20 +107,7 @@ Epoch 1: Val AP ~0.95
 
 ---
 
-## One-Line Setup
 
-If you have videos in folders:
-
-```bash
-# Generate splits and train
-python prepare_custom_dataset.py \
-    --fake_dir data/fake \
-    --real_dir data/real \
-    --output_dir data && \
-python train_effort_c2p.py \
-    --data_root data \
-    --config effort_c2p_config.yaml
-```
 
 ---
 
